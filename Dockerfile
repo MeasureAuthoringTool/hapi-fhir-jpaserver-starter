@@ -30,7 +30,8 @@ RUN curl -O https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem \
     && keytool -import -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -storepass "changeit" -alias "AWSrdsIntCACert" -file rds-ca-2019-us-east-1.pem --noprompt \
     && rm -rf /usr/local/tomcat/conf/logging.properties
 
-RUN curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
+RUN yum -y install unzip \
+    && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
     && unzip newrelic-java.zip
 
 RUN mkdir -p /data/hapi/lucenefiles && chmod 775 /data/hapi/lucenefiles
