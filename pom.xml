@@ -21,7 +21,7 @@
 
     <properties>
         <java.version>8</java.version>
-        <spring_boot_version>2.5.6</spring_boot_version>
+        <spring_boot_version>2.5.13</spring_boot_version>
     </properties>
 
     <prerequisites>
@@ -57,13 +57,13 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.25</version>
+            <version>8.0.31</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.23</version>
+            <version>42.3.3</version>
         </dependency>
 
         <!-- Needed for Email subscriptions -->
@@ -159,7 +159,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.29</version>
+            <version>1.32</version>
         </dependency>
 
         <!-- Used for CORS support -->
@@ -192,7 +192,7 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>bootstrap</artifactId>
-            <version>3.4.1</version>
+            <version>4.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
