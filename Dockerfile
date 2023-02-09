@@ -3,7 +3,6 @@ WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
 COPY pom.xml .
 COPY server.xml .
-RUN mvn -ntp dependency:go-offline
 
 COPY src/ /tmp/hapi-fhir-jpaserver-starter/src/
 RUN mvn clean install -DskipTests
