@@ -26,22 +26,17 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "hapi-fhir-jpaserver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: wait-for-db-to-be-ready
-          image: "{{ .Values.postgresql.image.registry }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          image: docker.io/bitnami/postgresql:16.4.0-debian-12-r1@sha256:fb3d0a34e7b9f3e59442aa1fa2e6377857147c09ae754ddd5d4bb3fc0dd137da
           imagePullPolicy: IfNotPresent
+          {{- with .Values.restrictedContainerSecurityContext }}
           securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            privileged: false
-            capabilities:
-              drop:
-                - ALL
-            runAsNonRoot: true
-            runAsUser: 1001
-            runAsGroup: 1001
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: PGHOST
               value: "{{ include "hapi-fhir-jpaserver.database.host" . }}"
@@ -60,33 +55,26 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ include "hapi-fhir-jpaserver.imageTag" . }}
+          image: {{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          {{- with .Values.readinessProbe }}
-            initialDelaySeconds: {{ .initialDelaySeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            successThreshold: {{ .successThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-          {{- end }}
-          startupProbe:
-            httpGet:
-              path: /fhir/metadata
-              port: http
+            - name: http-metrics
+              containerPort: 8081
+              protocol: TCP
           {{- with .Values.startupProbe }}
-            initialDelaySeconds: {{ .initialDelaySeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            successThreshold: {{ .successThreshold }}
-            failureThreshold: {{ .failureThreshold }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -102,12 +90,18 @@ spec:
                   key: {{ include "hapi-fhir-jpaserver.postgresql.secretKey" . }}
             - name: SPRING_DATASOURCE_DRIVERCLASSNAME
               value: org.postgresql.Driver
-            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
-              value: org.hibernate.dialect.PostgreSQL10Dialect
+            - name: spring.jpa.properties.hibernate.dialect
+              value: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
             - name: HAPI_FHIR_USE_APACHE_ADDRESS_STRATEGY
               value: "true"
-            - name: SPRING_JPA_DATABASE_PLATFORM
-              value: org.hibernate.dialect.PostgreSQLDialect
+            - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+              value: "true"
+            - name: MANAGEMENT_SERVER_PORT
+              value: "8081"
+            {{- if .Values.extraConfig }}
+            - name: SPRING_CONFIG_IMPORT
+              value: "/app/config/application-extra.yaml"
+            {{- end }}
             {{- if .Values.extraEnv }}
             {{ toYaml .Values.extraEnv | nindent 12 }}
             {{- end }}
@@ -116,6 +110,12 @@ spec:
               name: tmp-volume
             - mountPath: /app/target
               name: lucenefiles-volume
+          {{- if .Values.extraConfig }}
+            - name: application-extra-config
+              mountPath: /app/config/application-extra.yaml
+              readOnly: true
+              subPath: application-extra.yaml
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -128,8 +128,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: tmp-volume
           emptyDir: {}
         - name: lucenefiles-volume
           emptyDir: {}
+      {{- if .Values.extraConfig }}
+        - name: application-extra-config
+          configMap:
+            name: {{ include "hapi-fhir-jpaserver.fullname" . }}-application-config
+      {{- end }}
