@@ -2,7 +2,8 @@
 server:
   #  servlet:
   #    context-path: /example/path
-  port: 8080
+  port: 8087
+
 #Adds the option to go to eg. http://localhost:8080/actuator/health for seeing the running configuration
 #see https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.endpoints
 management:
@@ -41,11 +42,15 @@ spring:
     fail-on-missing-locations: false
   datasource:
     #url: 'jdbc:h2:file:./target/database/h2'
-    url: jdbc:h2:mem:test_mem
-    username: sa
-    password: null
-    driverClassName: org.h2.Driver
-    max-active: 15
+#    url: jdbc:h2:mem:test_mem
+#    username: sa
+#    password: null
+#    driverClassName: org.h2.Driver
+#    max-active: 15
+    url: jdbc:postgresql://localhost:5432/hapi
+    username: admin
+    password: admin
+    driverClassName: org.postgresql.Driver
 
     # database connection pool size
     hikari:
@@ -58,7 +63,8 @@ spring:
       #Hibernate dialect is automatically detected except Postgres and H2.
       #If using H2, then supply the value of ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
       #If using postgres, then supply the value of ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
-      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
+#      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
   #      hibernate.hbm2ddl.auto: update
   #      hibernate.jdbc.batch_size: 20
   #      hibernate.cache.use_query_cache: false
@@ -67,16 +73,19 @@ spring:
   #      hibernate.cache.use_minimal_puts: false
 
   ###    These settings will enable fulltext search with lucene or elastic
-      hibernate.search.enabled: false
+      hibernate.search.enabled: true
   ### lucene parameters
-#      hibernate.search.backend.type: lucene
-#      hibernate.search.backend.analysis.configurer: ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers$HapiLuceneAnalysisConfigurer
-#      hibernate.search.backend.directory.type: local-filesystem
-#      hibernate.search.backend.directory.root: target/lucenefiles
-#      hibernate.search.backend.lucene_version: lucene_current
+      hibernate.search.backend.type: lucene
+      hibernate.search.backend.analysis.configurer: ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers$HapiLuceneAnalysisConfigurer
+      hibernate.search.backend.directory.type: local-filesystem
+      hibernate.search.backend.directory.root: target/lucenefiles
+      hibernate.search.backend.lucene_version: lucene_current
   ### elastic parameters ===> see also elasticsearch section below <===
 #      hibernate.search.backend.type: elasticsearch
 #      hibernate.search.backend.analysis.configurer: ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers$HapiElasticAnalysisConfigurer
+    terminology:
+      deferred_storage_enabled: true
+      terminology_svc_enabled: true
 hapi:
   fhir:
     ### This flag when enabled to true, will avail evaluate measure operations from CR Module.
@@ -134,7 +143,7 @@ hapi:
     ### This is the FHIR version. Choose between, DSTU2, DSTU3, R4 or R5
     fhir_version: R4
     ### Flag is false by default. This flag enables runtime installation of IG's.
-    ig_runtime_upload_enabled: false
+    ig_runtime_upload_enabled: true
     ### This flag when enabled to true, will avail evaluate measure operations from CR Module.
 
     ### enable to use the ApacheProxyAddressStrategy which uses X-Forwarded-* headers
@@ -152,27 +161,77 @@ hapi:
     ### enable to set the Server URL
     #    server_address: http://hapi.fhir.org/baseR4
     #    defer_indexing_for_codesystems_of_size: 101
-    #    install_transitive_ig_dependencies: true
-    implementationguides:
-      qicore:
-        name: hl7.fhir.us.qicore
-        version: 4.9.0
+#    install_transitive_ig_dependencies: true
+
+    versioning:
+      resource: "versioned"
+
+#    implementationguides:
+#      - url: http://hl7.org/fhir/us/core/ImplementationGuide/hl7.fhir.us.core
+#        version: 3.1.1
+#        name: US Core 3.1.1
+#        packageId: hl7.fhir.us.core
+#        npmPackage: hl7.fhir.us.core
+#        description: Implementation Guide for US Core 3.1.1 profiles and extensions.
+#      - url: http://hl7.org/fhir/us/core/ImplementationGuide/hl7.fhir.us.core
+#        version: 6.1.0
+#        name: US Core 6.1.0
+#        packageId: hl7.fhir.us.core
+#        npmPackage: hl7.fhir.us.core
+#        description: Implementation Guide for US Core 6.1.0 profiles and extensions.
+
+
+#      uscore:
+#        name: hl7.fhir.us.core
+#        version: 3.1.1
+#        reloadExisting: true
+#        installMode: STORE_AND_INSTALL
+#      qicore:
+#        name: hl7.fhir.us.qicore
+#        version: 4.1.1
+#        reloadExisting: true
+#        installMode: STORE_AND_INSTALL
+#      qicore_6_0_0:
+#        name: hl7.fhir.us.qicore
+#        version: 6.0.0
+#      uscore_6_1_0:
+#        name: hl7.fhir.us.core
+#        version: 6.1.0
+
     enable_repository_validating_interceptor: true
-    #implementationguides:
-    ###    example from registry (packages.fhir.org)
-    #  swiss:
-    #    name: swiss.mednet.fhir
-    #    version: 0.8.0
-    #    reloadExisting: false
-    #    installMode: STORE_AND_INSTALL
-    #      example not from registry
-    #      ips_1_0_0:
-    #        packageUrl: https://build.fhir.org/ig/HL7/fhir-ips/package.tgz
-    #        name: hl7.fhir.uv.ips
-    #        version: 1.0.0
-    #    supported_resource_types:
-    #      - Patient
-    #      - Observation
+    implementationguides:
+#      - name: hl7.fhir.us.core
+#        version: 3.1.1
+#        packageUrl: https://packages.fhir.org/hl7.fhir.us.core/3.1.1
+#        installMode: STORE_AND_INSTALL
+#        reloadExisting: false
+      - name: hl7.fhir.us.core
+        version: 6.1.0
+        packageUrl: https://packages.fhir.org/hl7.fhir.us.core/6.1.0
+        installMode: STORE_AND_INSTALL
+        reloadExisting: false
+
+      ## Example from registry (packages.fhir.org)
+#      swiss:
+#        name: swiss.mednet.fhir
+#        version: 0.8.0
+#        reloadExisting: false
+#        installMode: STORE_AND_INSTALL
+#      ## Example not from registry
+#      ips_2_0_0:
+#        packageUrl: https://build.fhir.org/ig/HL7/fhir-ips/package.tgz
+#        name: IPS 2.0.0
+#        version: 2.0.0
+#      ips_1_1_0:
+#        packageUrl: https://hl7.org/fhir/uv/ips/STU1.1/package.tgz
+#        name: IPS 1.1.0
+#        version: 1.1.0
+#    supported_resource_types:
+#      - ValueSet
+#      - CodeSystem
+#      supported_resource_types:
+#        - Patient
+#        - Observation
     ##################################################
     # Allowed Bundle Types for persistence (defaults are: COLLECTION,DOCUMENT,MESSAGE)
     ##################################################

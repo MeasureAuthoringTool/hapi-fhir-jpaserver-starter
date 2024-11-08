@@ -30,19 +30,9 @@ USER 1001
 COPY --chown=1001:1001 catalina.properties /opt/bitnami/tomcat/conf/catalina.properties
 COPY --chown=1001:1001 server.xml /opt/bitnami/tomcat/conf/server.xml
 COPY --from=build-hapi --chown=1001:1001 /tmp/hapi-fhir-jpaserver-starter/target/ROOT.war /opt/bitnami/tomcat/webapps/ROOT.war
-COPY --from=build-hapi --chown=1001:1001 /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
+#COPY --from=build-hapi --chown=1001:1001 /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
 
 ENV ALLOW_EMPTY_PASSWORD=yes
-
-########### distroless brings focus on security and runs on plain spring boot - this is the default image
-FROM gcr.io/distroless/java17-debian12:nonroot AS default
-# 65532 is the nonroot user's uid
-# used here instead of the name to allow Kubernetes to easily detect that the container
-# is running as a non-root (uid != 0) user.
-USER 65532:65532
-WORKDIR /app
-#CMD ["/app/main.war"]
-#FROM tomcat:9-jdk11-corretto-al2
 
 RUN curl -O https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem \
     && curl -O https://s3.amazonaws.com/rds-downloads/rds-ca-2019-us-east-1.pem \
@@ -54,7 +44,17 @@ RUN yum -y install unzip \
     && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
     && unzip newrelic-java.zip
 
+########### distroless brings focus on security and runs on plain spring boot - this is the default image
+FROM gcr.io/distroless/java17-debian12:nonroot AS default
+# 65532 is the nonroot user's uid
+# used here instead of the name to allow Kubernetes to easily detect that the container
+# is running as a non-root (uid != 0) user.
+USER 65532:65532
+WORKDIR /app
+#CMD ["/app/main.war"]
+#FROM tomcat:9-jdk11-corretto-al2
+
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
-COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
+#COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
