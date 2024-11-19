@@ -199,17 +199,17 @@ hapi:
 #        version: 6.1.0
 
     enable_repository_validating_interceptor: true
-    implementationguides:
+#    implementationguides:
 #      - name: hl7.fhir.us.core
 #        version: 3.1.1
 #        packageUrl: https://packages.fhir.org/hl7.fhir.us.core/3.1.1
 #        installMode: STORE_AND_INSTALL
 #        reloadExisting: false
-      - name: hl7.fhir.us.core
-        version: 6.1.0
-        packageUrl: https://packages.fhir.org/hl7.fhir.us.core/6.1.0
-        installMode: STORE_AND_INSTALL
-        reloadExisting: false
+#      - name: hl7.fhir.us.core
+#        version: 6.1.0
+#        packageUrl: https://packages.fhir.org/hl7.fhir.us.core/6.1.0
+#        installMode: STORE_AND_INSTALL
+#        reloadExisting: false
 
       ## Example from registry (packages.fhir.org)
 #      swiss:
