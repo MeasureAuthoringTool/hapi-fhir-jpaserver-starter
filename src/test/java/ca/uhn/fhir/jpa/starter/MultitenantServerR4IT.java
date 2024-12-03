@@ -12,23 +12,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = Application.class, properties =
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {Application.class}, properties =
   {
-    "spring.batch.job.enabled=false",
     "spring.datasource.url=jdbc:h2:mem:dbr4-mt",
     "hapi.fhir.fhir_version=r4",
     "hapi.fhir.subscription.websocket_enabled=true",
+	  "hapi.fhir.cr_enabled=false",
     "hapi.fhir.partitioning.partitioning_include_in_search_hashes=false",
-	  "spring.main.allow-bean-definition-overriding=true"
 
   })
-public class MultitenantServerR4IT {
+class MultitenantServerR4IT {
 
 
   private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ExampleServerDstu2IT.class);
@@ -42,7 +41,7 @@ public class MultitenantServerR4IT {
 
 
   @Test
-  public void testCreateAndReadInTenantA() {
+  void testCreateAndReadInTenantA() {
 
 
     // Create tenant A
@@ -68,7 +67,7 @@ public class MultitenantServerR4IT {
   }
 
   @Test
-  public void testCreateAndReadInTenantB() {
+  void testCreateAndReadInTenantB() {
 
 
     // Create tenant A
