@@ -12,6 +12,11 @@ FROM build-hapi AS build-distroless
 RUN mvn package -DskipTests spring-boot:repackage -Pboot
 RUN mkdir /app && \
     cp /tmp/hapi-fhir-jpaserver-starter/target/ROOT.war /app/main.war
+RUN apt update \
+    && apt -y install unzip \
+    && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
+    && unzip newrelic-java.zip \
+    && mv /newrelic /app
 
 
 ########### bitnami tomcat version is suitable for debugging and comes with a shell
@@ -53,9 +58,5 @@ WORKDIR /app
 
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
 #COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
-
-RUN yum -y install unzip \
-    && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
-    && unzip newrelic-java.zip
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
