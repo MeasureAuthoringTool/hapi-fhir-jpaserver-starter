@@ -1,3 +1,6 @@
+FROM alpine AS alpine
+RUN wget -O newrelic-agent.jar https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-agent.jar
+
 FROM docker.io/library/maven:3.9.9-eclipse-temurin-17 AS build-hapi
 WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
@@ -12,11 +15,6 @@ FROM build-hapi AS build-distroless
 RUN mvn package -DskipTests spring-boot:repackage -Pboot
 RUN mkdir /app && \
     cp /tmp/hapi-fhir-jpaserver-starter/target/ROOT.war /app/main.war
-RUN apt update \
-    && apt -y install unzip \
-    && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
-    && unzip newrelic-java.zip \
-    && mv /newrelic /app
 
 
 ########### bitnami tomcat version is suitable for debugging and comes with a shell
@@ -57,6 +55,8 @@ WORKDIR /app
 #FROM tomcat:9-jdk11-corretto-al2
 
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
+FROM alpine AS alpine
+RUN wget -O newrelic-agent.jar https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-agent.jar
 #COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
