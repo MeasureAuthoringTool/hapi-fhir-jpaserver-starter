@@ -55,8 +55,6 @@ WORKDIR /app
 #FROM tomcat:9-jdk11-corretto-al2
 
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
-FROM alpine AS alpine
-RUN wget -O newrelic-agent.jar https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-agent.jar
-#COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
+COPY --chown=nonroot:nonroot --from=alpine newrelic-agent.jar /app/newrelic-agent.jar
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
