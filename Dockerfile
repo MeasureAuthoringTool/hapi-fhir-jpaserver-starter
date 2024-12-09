@@ -1,3 +1,6 @@
+FROM alpine AS alpine
+RUN wget -O newrelic-agent.jar https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-agent.jar
+
 FROM docker.io/library/maven:3.9.9-eclipse-temurin-17 AS build-hapi
 WORKDIR /tmp/hapi-fhir-jpaserver-starter
 
@@ -40,9 +43,6 @@ RUN curl -O https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem \
     && keytool -import -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -storepass "changeit" -alias "AWSrdsIntCACert" -file rds-ca-2019-us-east-1.pem --noprompt \
     && rm -rf /usr/local/tomcat/conf/logging.properties
 
-RUN yum -y install unzip \
-    && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic-java.zip \
-    && unzip newrelic-java.zip
 
 ########### distroless brings focus on security and runs on plain spring boot - this is the default image
 FROM gcr.io/distroless/java17-debian12:nonroot AS default
@@ -55,6 +55,6 @@ WORKDIR /app
 #FROM tomcat:9-jdk11-corretto-al2
 
 COPY --chown=nonroot:nonroot --from=build-distroless /app /app
-#COPY --chown=nonroot:nonroot --from=build-hapi /tmp/hapi-fhir-jpaserver-starter/opentelemetry-javaagent.jar /app
+COPY --chown=nonroot:nonroot --from=alpine newrelic-agent.jar /app/newrelic-agent.jar
 
 ENTRYPOINT ["java", "--class-path", "/app/main.war", "-Dloader.path=main.war!/WEB-INF/classes/,main.war!/WEB-INF/,/app/extra-classes", "org.springframework.boot.loader.PropertiesLauncher"]
